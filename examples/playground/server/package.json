@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "dotenv": "^7.0.0",
+    "express": "^4.16.4",
+    "morgan": "^1.9.1",
+    "pg": "^7.9.0",
+    "pg-parse-float": "0.0.1",
+    "ramda": "^0.26.1",
+    "ramda-extras": "^0.4.6"
+  },
+  "devDependencies": {
+    "coffeescript": "^2.4.1",
+    "nodemon": "^1.18.11"
+  },
+  "scripts": {
+    "start": "nodemon ./src/server.coffee"
+  },
+  "author": "",
+  "license": "ISC"
+}

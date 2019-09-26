@@ -1,0 +1,53 @@
+{has, isNil, type} = R = require 'ramda' # auto_require: ramda
+{$} = RE = require 'ramda-extras' # auto_require: ramda-extras
+[] = [] #auto_sugar
+
+React = require 'react'
+renderer = require './style/renderer'
+popsiql = require 'popsiql'
+React = require 'react'
+
+	
+# console.clear()
+
+
+array = (xs...) -> xs
+
+# Underscore is such a nice alias helper so we're doing some guessing to determin if it
+# was used for array (popsiql queries / data queries) or for react.createElement.
+arrayOrRenderer = ->
+	[a0, a1] = arguments
+
+	if arguments.length == 1
+		# This case is hard... For now if you cannot render _ {} you must have _ {is: ''} or _ {s: ''}
+		if 'Object' == type(a0) && (has('s', a0) || has('is', a0)) then renderer arguments...
+		else return array arguments...
+
+	if 'Object' == type a0
+		# if React.isValidElement a1
+		# 	console.log a1
+		# return renderer arguments...
+		if isNil a1 then return renderer arguments...
+		else if 'Object' == type(a1)
+			if has '$$typeof', a1 then return renderer arguments...
+			else return array arguments...
+		# else if 'Array' == type a1 then return renderer arguments...
+		# else if 'String' == type a1 then return renderer arguments...
+		else
+			return renderer arguments...
+		# if React.isValidElement a1 then return renderer arguments...
+		# else return array arguments...
+		# console.log a1
+		# return renderer arguments...
+		# if 'Object' == type a1 then return array arguments...
+		# else return renderer arguments...
+
+	else if 'Function' == type(a0) || 'String' == type a0
+		if 'Object' == type a1 then return renderer arguments...
+
+	return array arguments...
+
+
+
+module.exports = {_: arrayOrRenderer}
+
