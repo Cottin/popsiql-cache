@@ -1,6 +1,6 @@
 {all, isNil, map, match, props, reverse, test, toPairs, type} = R = require 'ramda' #auto_require: ramda
 {fmap, change, fmapO, $, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
-[ːdate, ːprice, ːtext, ːdueDate, ːname, ːtype, ːamount] = ['date', 'price', 'text', 'dueDate', 'name', 'type', 'amount'] #auto_sugar
+[ːdueDate, ːname, ːamount, ːprice, ːdate, ːtext, ːtype] = ['dueDate', 'name', 'amount', 'price', 'date', 'text', 'type'] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
 qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
 
@@ -83,6 +83,7 @@ cache = createCache
 			fullDelta = fmapO serverDelta, (items, entity) ->
 				return fmapO items, (v, k) -> if isNil v then undefined else v
 			return fullDelta
+	report: (o) -> # console.log o
 
 window.cache = cache
 
@@ -100,7 +101,7 @@ useCache = () ->
 
 	return [state, commitStatus]
 
-useQuery = (query, localOnly = false) ->
+useQuery = (query, key, subType = 'full') ->
 	t0 = performance.now()
 	[localRes] = cache.queryLocal query # get initial data if there is any
 	console.log "queryLocal #{ Math.round performance.now() - t0 } ms :", localRes
@@ -108,7 +109,7 @@ useQuery = (query, localOnly = false) ->
 
 	useEffect () ->
 		cb = (res) -> setCacheCounter (count) -> count + 1
-		return cache.sub query, localOnly, cb, localRes
+		return cache.sub query, subType, cb, key, localRes
 
 	# https://github.com/facebook/react/issues/14476#issuecomment-471199055
 	# Note: we know dataQueries are small shallow objects anyway so JSON.stringify
@@ -150,34 +151,24 @@ useDeepState = (initial) ->
 count = 1
 Body = () ->
 	[state, setState] = useDeepState
-		subs: {}, query: null, delta: null, showQueries: false, showDeltas: false, throw: false, localOnly: false
+		subs: {}, query: null, delta: null, showQueries: false, showDeltas: false, throw: false, subType: 'full',
 	{query, delta} = state
 
-	_ {is: 'Body', s: 'xc___1 p10_10 h100vh'},
+	_ {is: 'Body', s: 'xc__ xg1 p10_10 h100vh'},
 		_ {s: 'xrb_ h100%'},
 			_ Left, {}
-			_ {s: 'xg1 xb1 w50%'},
+			_ {s: 'xg1 w50%'},
 				_ {s: 'bgwh-4 fa11bk-53 p8_10 mb5'}, 'APP STATE: '
 				_ Code, {text: query && popsiql.utils.queryToString(query) || sf2(delta), s: 'h200 ovs'}
-				_ {s: 'xrbc m10_0_20_0'},
+				_ {s: 'xrbc mt10'},
 					_ {s: 'xrb_'},
 						_ Link, {s: 'mr15', onClick: -> setState {showQueries: true}}, 'Queries'
 						_ Link, {s_: 'mr15 f__re', onClick: -> setState {showDeltas: true}}, 'Deltas'
-						_ {s: 'xr__'},
-							_ {s: 'fa11bk-46 mr5'}, 'Throw:'
-							_ 'input', {type: 'checkbox', checked: state.throw,
-							onChange: (e) ->
-								globals.throw = e.target.checked
-								setState({throw: e.target.checked})}
-						_ {s: 'xr__'},
-							_ {s: 'fa11bk-46 ml10 mr5'}, 'Local only:'
-							_ 'input', {type: 'checkbox', checked: state.localOnly,
-							onChange: (e) -> setState({localOnly: e.target.checked})}
 					_ {s: 'xrbc'},
 						if query
 							_ {s: 'bgbu p10 fa11wh5 _curp', onClick: ->
 								subId = count++
-								setState {subs: {[subId]: {query,  data: null, localOnly: state.localOnly}}}
+								setState {subs: {[subId]: {query,  data: null, subType: state.subType}}}
 								# qq -> state.localOnly
 								# if state.localOnly
 								# 	cache.subLocal query, (data) -> setState {subs: {[subId]: {data}}}
@@ -185,12 +176,49 @@ Body = () ->
 								# 	cache.sub query, (data) -> setState {subs: {[subId]: {data}}}
 							}, 'SUBSCRIBE'
 						if delta
-							_ {s: 'bgre p10 fa11wh5 _curp', onClick: ->
-								cache.commit delta
-							}, 'COMMIT'
+							_ {s: 'xr__'},
+								_ {s: 'p10 fa11bk-45 _curp', onClick: ->
+									cache.undo()
+								}, 'UNDO'
+								_ {s: 'bgre p10 fa11wh5 _curp', onClick: ->
+									cache.edit delta
+								}, 'EDIT'
+								_ {s: 'bgbu p10 fa11wh5 _curp', onClick: ->
+									cache.commit()
+								}, 'COMMIT'
+
+				_ {s: 'xrbc mb20'},
+					_ {s: 'xrb_'},
+						_ {s: 'xr__'},
+							_ {s: 'fa11bk-46 mr5'}, 'Throw:'
+							_ 'input', {type: 'checkbox', checked: state.throw,
+							onChange: (e) ->
+								globals.throw = e.target.checked
+								setState({throw: e.target.checked})}
+
+							# _ {s: 'fa11bk-46 mr5'}, 'Local only:'
+							# _ 'input', {type: 'checkbox', checked: state.localOnly,
+							# onChange: (e) ->
+							# 	setState({localOnly: e.target.checked})}
+
+						_ {s: 'xr__'},
+							_ {s: 'fa11bk-46 ml10 mr5'}, 'Type:'
+							_ 'label', {s: 'xr__ mr10'},
+								_ 'input', {type: 'radio', checked: state.subType == 'full', id: 'full',
+								onChange: (e) -> setState({subType: 'full'})}
+								_ {}, 'Full'
+							_ 'label', {s: 'xr__ mr10'},
+								_ 'input', {type: 'radio', checked: state.subType == 'local',
+								onChange: (e) -> setState({subType: 'local'})}
+								_ {}, 'Local'
+							_ 'label', {s: 'xr__'},
+								_ 'input', {type: 'radio', checked: state.subType == 'edit',
+								onChange: (e) -> setState({subType: 'edit'})}
+								_ {}, 'Edit'
+
 				_ {s: '_ani'},
-					$ state.subs, toPairs, reverse, map ([id, {query, localOnly, data}]) ->
-						_ Sub, {key: id, query, localOnly, data, id,
+					$ state.subs, toPairs, reverse, map ([id, {query, subType, data}]) ->
+						_ Sub, {key: id, query, subType, data, id,
 						onDelete: -> setState {subs: {[id]: undefined}}}
 					_ {s: 'posa top5 lef40% bgwh p10 bordbk_1'},
 						React.createElement PerfSpinner, {}
@@ -214,7 +242,7 @@ Body = () ->
 
 Left = ->
 	[cacheState, commitStatus] = useCache()
-	_ {s: 'xg1 pr5 h100% xb1 w50% xc__'},
+	_ {s: 'xg1 pr5 h100% w50% xc__'},
 		_ {s: 'bgwh-4 fa11bk-53 p8_10 mb5'}, 'COMMIT STATUS: ' + friendlyCommitStatus commitStatus
 		# _ TextArea, {value: sf2(data), s: 'h100%'}
 		_ Code, {text: sf2(cacheState), s: 'xg1'}
@@ -222,8 +250,8 @@ Left = ->
 TextArea = (props) ->
 	_ 'textarea', {...props, s: 'bgwh bordwh p10 w100% fc10bk-8 _tabs'}, code
 
-Sub = ({query, localOnly, data, id, onDelete}) ->
-	data = useQuery query, localOnly
+Sub = ({query, subType, data, id, onDelete}) ->
+	data = useQuery query, id, subType
 	console.log 'RENDER Sub: ', data
 	_ {s: 'mb20 posr'},
 		_ {s: 'posa top1 rig5 fa10re5'}, id
@@ -231,7 +259,7 @@ Sub = ({query, localOnly, data, id, onDelete}) ->
 		_ {s: 'bgwh-4 p10 fc10bk-8 whp'}, popsiql.utils.queryToString query
 		_ {s: 'bgwh bordwh w100% fc10bk-8 whp p10 h350 ovs'}, sf2 data
 
-SubTest = ({query, localOnly, id, onDelete}) ->
+SubTest = ({query, subType, id, onDelete}) ->
 	[, setCount] = useState 0
 	[localRes] = cache.queryLocal query # get initial data if there is any
 
@@ -242,7 +270,7 @@ SubTest = ({query, localOnly, id, onDelete}) ->
 				console.log "setCount: #{count + 1}"
 				count + 1
 
-		return cache.sub query, localOnly, cb, localRes
+		return cache.sub query, subType, cb, localRes
 
 	# https://github.com/facebook/react/issues/14476#issuecomment-471199055
 	# Note: we know dataQueries are small shallow objects anyway so JSON.stringify
@@ -285,7 +313,9 @@ queries = [
 		Company: _ { ːname}
 	}
 	{name: 'entry.id = 1', query:
-		WorkEntry1: _ {id: 1, ːdate, ːamount, ːtext}
+		WorkEntry1: _ {id: 1, ːdate, ːamount, ːtext},
+			project: _ {ːname},
+				company: _ {ːname}
 	}
 	{name: 'all projects', query:
 		Project: _ {ːname, ːprice, ːtype, ːdueDate},
@@ -300,6 +330,9 @@ queries = [
 deltas = [
 	{name: '3 hour to entry 1', delta:
 		WorkEntry: {1: {amount: 3}}
+	}
+	{name: '4 hour to entry 1', delta:
+		WorkEntry: {1: {amount: 4}}
 	}
 	{name: 'change workentries', delta:
 		WorkEntry:

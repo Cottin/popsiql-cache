@@ -1,7 +1,7 @@
 {
   "name": "popsiql-cache",
   "version": "0.1.0",
-  "description": "...",
+  "description": "Simple cache based on popsiql",
   "main": "lib/createCache.js",
   "scripts": {
     "test": "mocha 'src/**/test*.coffee' --watch --compilers coffee:coffeescript/register --transpile --slow 1",

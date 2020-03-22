@@ -1,6 +1,9 @@
-{empty, isNil, keys, length, map, test, type} = R = require 'ramda' # auto_require: ramda
-{fmapO, maxIn, $} = RE = require 'ramda-extras' # auto_require: ramda-extras
+{empty, isNil, keys, length, map, match, test, type} = R = require 'ramda' #auto_require: ramda
+{fmapO, maxIn, $} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [ːramda] = ['ramda'] #auto_sugar
+qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
+qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
+_ = (...xs) -> xs
 
 require('dotenv').config()
 
