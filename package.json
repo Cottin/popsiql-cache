@@ -1,20 +1,22 @@
 {
   "name": "popsiql-cache",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simple cache based on popsiql",
-  "main": "lib/createCache.js",
+  "main": "createCache.js",
   "scripts": {
     "test": "mocha 'src/**/test*.coffee' --watch --compilers coffee:coffeescript/register --transpile --slow 1",
-    "clean": "rimraf lib",
-    "build": "coffee -o lib/ -c src/",
-    "dist": "npm run clean && npm run build"
+    "clean": "rimraf *.js",
+    "build": "coffee -o ./ -c src/",
+    "dist": "npm run clean && npm run build",
+    "pub": "npm run dist && npm publish && npm run clean"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Cottin/popsiql-cache.git"
   },
   "keywords": [
-    "cache", "popsiql"
+    "cache",
+    "popsiql"
   ],
   "author": "Victor Cottin <victor@wecodebetter.se> (http://www.wecodebetter.se/)",
   "license": "MIT",
