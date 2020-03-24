@@ -1,6 +1,6 @@
 {
   "name": "popsiql-cache",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Simple cache based on popsiql",
   "main": "createCache.js",
   "scripts": {
@@ -26,9 +26,9 @@
   "homepage": "https://github.com/Cottin/popsiql-cache",
   "dependencies": {
     "lodash.debounce": "^4.0.8",
-    "popsiql": "^0.2.3",
-    "ramda": "^0.25.0",
-    "ramda-extras": "^0.4.6"
+    "popsiql": ">0.2.3",
+    "ramda": ">0.25.0",
+    "ramda-extras": ">0.4.6"
   },
   "devDependencies": {
     "babel-core": "^6.3.15",
