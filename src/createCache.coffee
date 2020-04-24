@@ -110,7 +110,8 @@ class Cache
 
 	queryLocal: (query, subType) ->
 		memoKey = @_memoKey {query, subType}
-		if @memo[memoKey] then return @memo[memoKey]
+		# Commenting out memo since we don't have a good way to invalidate it! Doesn't work then!
+		# if @memo[memoKey] then return @memo[memoKey]
 
 		fatQuery = popsiql.query.expandQuery @config.model, query
 		[res, resNorm] = @_runLocal {fatQuery, query, subType}, true
