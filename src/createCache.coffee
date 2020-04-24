@@ -108,13 +108,13 @@ class Cache
 			delete @subs[key]
 			if subType == 'edit' then delete @editSubs[key]
 
-	queryLocal: (query) ->
-		squery = JSON.stringify(query)
-		if @memo[squery] then return @memo[squery]
+	queryLocal: (query, subType) ->
+		memoKey = @_memoKey {query, subType}
+		if @memo[memoKey] then return @memo[memoKey]
 
 		fatQuery = popsiql.query.expandQuery @config.model, query
-		[res, resNorm] = @_runLocal {fatQuery, query}, true
-		@memo[squery] = [res, resNorm]
+		[res, resNorm] = @_runLocal {fatQuery, query, subType}, true
+		@memo[memoKey] = [res, resNorm]
 		return [res, resNorm]
 
 	update: (delta) ->
@@ -122,20 +122,16 @@ class Cache
 
 	edit: (delta) ->
 		undo = {}
-		newState = change.meta delta, @state, undo, @changes
+		statePlusChanges = change @changes, @state
+		newStateNeverUsed = change.meta delta, statePlusChanges, undo, @changes
 		@undos.push undo
-		@state = newState
-		@stateHook? @state
+		@stateHook? @state, @changes
 		@_editFlush()
 
 	undo: () ->
-		newState = @state
-		for u in @undos by -1
-			newState = change u, newState
 		@undos = []
 		@changes = {}
-		@state = newState
-		@stateHook? @state
+		@stateHook? @state, @changes
 		@_editFlush()
 
 	reset: () ->
@@ -194,6 +190,7 @@ class Cache
 			@_changeObjectStatus undefined, delta, @config.successStay
 			@_setCommitStatus 's'
 			@changes = {}
+			@stateHook? @state, @changes
 			@undos = []
 			return serverDelta2
 		catch err
@@ -218,19 +215,22 @@ class Cache
 		undo = {}	
 		newState = change.meta delta, @state, undo, @totalChanges
 		@state = newState
-		@stateHook? @state
+		@stateHook? @state, @changes
 		@_flush()
 		@changeCount = @changeCount + 1
 
 	_setState: (newState) ->
 		@state = newState
-		@stateHook? @state
+		@stateHook? @state, @changes
 		@_flush()
+
+	_memoKey: ({query, subType}) ->
+		return JSON.stringify(query) + if subType == 'edit' then 'edit' else ''
 
 	_editFlush: ->
 		for key, sub of @editSubs
-			[res, resNorm] = await @_runLocal sub
-			@memo[JSON.stringify(sub.query)] = [res, resNorm]
+			[res, resNorm] = @_runLocal sub, true
+			@memo[@_memoKey(sub)] = [res, resNorm]
 			resId = resultToId res
 			if resId != sub.lastRes
 				sub.cb res
@@ -244,7 +244,7 @@ class Cache
 		for key, sub of @subs
 			t0 = performance.now()
 			[res, resNorm] = await @_runLocal sub
-			@memo[JSON.stringify(sub.query)] = [res, resNorm]
+			@memo[@_memoKey(sub)] = [res, resNorm]
 			resId = resultToId res
 			if resId != sub.lastRes
 				sub.cb res, t0
@@ -269,8 +269,9 @@ class Cache
 		@commitStatus = s
 		@config.commitHook? @commitStatus, @commitMsg
 
-	_runLocal: ({fatQuery, query}, sync = false) ->
-		popsiqlRamda = popsiql.ramda @config.model, @state
+	_runLocal: ({fatQuery, query, subType}, sync = false) ->
+		stateToUse = if subType != 'edit' then @state else change @changes, @state
+		popsiqlRamda = popsiql.ramda @config.model, stateToUse
 		ramdaRead = (fatQuery) =>
 			popsiqlRamda.read fatQuery, (entity, id, o) =>
 				if @state[entity]?[id]?._ then merge o, {_: @state[entity][id]._}

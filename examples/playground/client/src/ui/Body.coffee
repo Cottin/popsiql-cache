@@ -1,6 +1,6 @@
 {all, isNil, map, match, props, reverse, test, toPairs, type} = R = require 'ramda' #auto_require: ramda
 {fmap, change, fmapO, $, sf2} = RE = require 'ramda-extras' #auto_require: ramda-extras
-[ːdueDate, ːname, ːamount, ːprice, ːdate, ːtext, ːtype] = ['dueDate', 'name', 'amount', 'price', 'date', 'text', 'type'] #auto_sugar
+[ːname, ːtext, ːprice, ːdueDate, ːdate, ːamount, ːtype] = ['name', 'text', 'price', 'dueDate', 'date', 'amount', 'type'] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
 qqq = (f) -> console.log match(/return (.*);/, f.toString())[1], JSON.stringify(f(), null, 2)
 
@@ -89,21 +89,27 @@ window.cache = cache
 
 
 useCache = () ->
+	 # seems changes doesn't trigger change (because ref not value?), so count is workaround
+	[count, setCount] = useState 0
 	[state, setState] = useState cache.state
+	[changes, setChanges] = useState cache.changes
 	[commitStatus, setCommitStatus] = useState cache.commitStatus
 	useEffect () ->
 		cache.commitHook = (newCommitStatus) -> setCommitStatus newCommitStatus
-		cache.stateHook = (newState) -> setState newState
+		cache.stateHook = (currentState, currentChanges) ->
+			setCount count + 1
+			setState cache.state
+			setChanges cache.changes
 
 		return () ->
 			cache.commitHook = null
 			cache.stateHook = null
 
-	return [state, commitStatus]
+	return [state, changes, commitStatus, count]
 
 useQuery = (query, key, subType = 'full') ->
 	t0 = performance.now()
-	[localRes] = cache.queryLocal query # get initial data if there is any
+	[localRes] = cache.queryLocal query, subType # get initial data if there is any
 	console.log "queryLocal #{ Math.round performance.now() - t0 } ms :", localRes
 	[cacheCounter, setCacheCounter] = useState 0
 
@@ -241,11 +247,12 @@ Body = () ->
 								setState {delta}}, name
 
 Left = ->
-	[cacheState, commitStatus] = useCache()
+	[cacheState, cacheChanges, commitStatus, count] = useCache()
 	_ {s: 'xg1 pr5 h100% w50% xc__'},
 		_ {s: 'bgwh-4 fa11bk-53 p8_10 mb5'}, 'COMMIT STATUS: ' + friendlyCommitStatus commitStatus
 		# _ TextArea, {value: sf2(data), s: 'h100%'}
-		_ Code, {text: sf2(cacheState), s: 'xg1'}
+		_ Code, {text: sf2(cacheChanges), s: 'xg1 mb5 xb1'}
+		_ Code, {text: sf2(cacheState), s: 'xg1 xb5'}
 
 TextArea = (props) ->
 	_ 'textarea', {...props, s: 'bgwh bordwh p10 w100% fc10bk-8 _tabs'}, code
@@ -254,6 +261,7 @@ Sub = ({query, subType, data, id, onDelete}) ->
 	data = useQuery query, id, subType
 	console.log 'RENDER Sub: ', data
 	_ {s: 'mb20 posr'},
+		_ {s: 'posa top1 rig20 fa9bk-85'}, subType
 		_ {s: 'posa top1 rig5 fa10re5'}, id
 		_ {s: 'posa top10 rig5 fa10bu5 _curp', onClick: onDelete}, 'Delete'
 		_ {s: 'bgwh-4 p10 fc10bk-8 whp'}, popsiql.utils.queryToString query
@@ -313,9 +321,9 @@ queries = [
 		Company: _ { ːname}
 	}
 	{name: 'entry.id = 1', query:
-		WorkEntry1: _ {id: 1, ːdate, ːamount, ːtext},
-			project: _ {ːname},
-				company: _ {ːname}
+		WorkEntry1: _ {id: 1, ːdate, ːamount, ːtext}#,
+			# project: _ {ːname},
+			# 	company: _ {ːname}
 	}
 	{name: 'all projects', query:
 		Project: _ {ːname, ːprice, ːtype, ːdueDate},
