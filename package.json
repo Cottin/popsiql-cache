@@ -1,6 +1,6 @@
 {
   "name": "popsiql-cache",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Simple cache based on popsiql",
   "main": "src/createCache.coffee",
   "scripts": {
@@ -9,8 +9,8 @@
     "build": "coffee -o ./ -c src/",
     "dist": "npm run clean && npm run build && npm run sedjs",
     "pub": "npm run dist && npm publish && npm run clean && npm run sedcoffee",
-    "sedjs": "sed -i '' -e 's/createCache.coffee\"/createCache.js\"/g' ./package.json",
-    "sedcoffee": "sed -i '' -e 's/createCache.js\"/createCache.coffee\"/g' ./package.json"
+    "sedjs": "sed -i '' -e 's/src\\\/createCache.coffee\"/createCache.js\"/g' ./package.json",
+    "sedcoffee": "sed -i '' -e 's/createCache.js\"/src\\\/createCache.coffee\"/g' ./package.json"
   },
   "repository": {
     "type": "git",
