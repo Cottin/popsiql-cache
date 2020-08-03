@@ -1,4 +1,4 @@
-{contains, dissoc, equals, has, isEmpty, isNil, keys, match, merge, mergeDeepLeft, omit, props, type} = R = require 'ramda' #auto_require: ramda
+contains = require('ramda/es/contains').default; dissoc = require('ramda/es/dissoc').default; equals = require('ramda/es/equals').default; has = require('ramda/es/has').default; isEmpty = require('ramda/es/isEmpty').default; isNil = require('ramda/es/isNil').default; keys = require('ramda/es/keys').default; match = require('ramda/es/match').default; merge = require('ramda/es/merge').default; mergeDeepLeft = require('ramda/es/mergeDeepLeft').default; omit = require('ramda/es/omit').default; props = require('ramda/es/props').default; type = require('ramda/es/type').default; #auto_require: srcramda
 {change, func, fmapO, customError} = RE = require 'ramda-extras' #auto_require: ramda-extras
 [] = [] #auto_sugar
 qq = (f) -> console.log match(/return (.*);/, f.toString())[1], f()
