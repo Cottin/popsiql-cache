@@ -1,6 +1,6 @@
 {
   "name": "popsiql-cache",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Simple cache based on popsiql",
   "main": "createCache.js",
   "scripts": {
