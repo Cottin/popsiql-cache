@@ -32,7 +32,7 @@
     "fela-plugin-embedded": "^10.6.1",
     "fela-plugin-fallback-value": "^10.4.1",
     "fela-plugin-prefixer": "^10.4.1",
-    "immer": "^3.1.2",
+    "immer": "^8.0.1",
     "lodash.debounce": "^4.0.8",
     "ramda": "^0.26.1",
     "ramda-extras": "^0.4.3",
